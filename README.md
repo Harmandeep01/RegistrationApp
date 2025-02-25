@@ -13,7 +13,7 @@ This project is part of the NodeCourse and focuses on creating a user registrati
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/registration-project.git
+    git clone https://github.com/Harmandeep01/RegistrationApp.git
     ```
 2. Navigate to the project directory:
     ```bash

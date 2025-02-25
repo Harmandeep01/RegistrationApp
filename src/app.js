@@ -1,4 +1,6 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const hbs = require('hbs');
 const path = require('path');
 const app = express();
@@ -42,15 +44,17 @@ app.post('/registration', async (req, res) => {
         if (pass !== cpass) {
             return res.status(400).json({ error: "Passwords do not match" });
         } 
-        console.log(req.body);
+        
         const registerUser = new Register({
             username: req.body.username,
             email: req.body.email,
-            password: pass
+            password: pass,
+            confirmpassword: cpass
         });
 
+        const token = await registerUser.generateAuthToken();
+
         await registerUser.save();
-        console.log(registerUser);
         res.status(201).render('index');
       
     
@@ -64,26 +68,29 @@ app.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body; // Destructure email and password from req.body
 
-        // Find the user by email
         const userEmail = await Register.findOne({ email: email });
 
-        // Check if the user exists
         if (!userEmail) {
-            return res.status(400).send("Invalid Login Details: User not found");
+            return res.status(400).send("Invalid Login Details");
         }
 
-        // Compare the provided password with the stored password
-        if (userEmail.password === password) {
-            res.status(201).render('index'); // Render the index page on successful login
-            console.log("Login Successful");
-        } else {
-            res.status(400).send("Invalid Login Details: User not found");
+        const isMatch = await bcrypt.compare(password, userEmail.password);
+        const token = await userEmail.generateAuthToken();
+        console.log(`The token is ${token}`);
+        if (!isMatch) {
+            return res.status(400).send("Invalid Login Details");
         }
+           
+        res.status(200).render('index');   
+
     } catch (error) {
         console.error(error); // Log the error for debugging
         res.status(500).send("Internal Server Error");
     }
 });
+
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on PORT ${PORT}`);
